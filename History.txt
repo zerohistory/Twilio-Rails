@@ -1,4 +1,4 @@
-=== git
+=== 1.1.5.1 / 2010-07-15
 
 * Make Rails 3 - compatible by removing RAILS_ROOT and RAILS_ENV
 
