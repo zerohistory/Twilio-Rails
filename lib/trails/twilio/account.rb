@@ -16,7 +16,7 @@ module Trails
       end
 
       def self.sid_from_request( request )
-        ( :development == RAILS_ENV.to_sym ) ? request.params['AccountSid'] : request.env["HTTP_X_TWILIO_ACCOUNTSID"]
+        ( :development == Rails.env.to_sym ) ? request.params['AccountSid'] : request.env["HTTP_X_TWILIO_ACCOUNTSID"]
       end
 
       def self.from_request( request )
@@ -180,8 +180,8 @@ module Trails
       def self.config
         @@all_cfg ||= YAML::load_file( config_file ).freeze
         # allow per-environment configuration
-        @@cfg ||= if ( @@all_cfg.has_key?( RAILS_ENV ) ) 
-                    @@all_cfg[ RAILS_ENV ] 
+        @@cfg ||= if ( @@all_cfg.has_key?( Rails.env ) ) 
+                    @@all_cfg[ Rails.env ] 
                   elsif( @@all_cfg.has_key?( 'default' ) )
                     @@all_cfg['default']
                   else
@@ -190,7 +190,7 @@ module Trails
       end
 
       def self.config_file
-        return File.join( RAILS_ROOT, 'config', 'twilio.yml' )
+        return Rails.root.join('config', 'twilio.yml').to_s
       end
 
     end # class Account
