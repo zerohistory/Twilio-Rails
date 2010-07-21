@@ -52,6 +52,11 @@ module Trails
           'Method' => opts['Method'] || opts[:method] || 'GET',
           'Timeout' => opts['Timeout'] || opts[:timeout] || 15
         }
+
+        if if_machine = opts[:if_machine]
+          params['IfMachine'] = if_machine.to_s.capitalize
+        end
+
         request( 'Calls', 'POST', params )
       end
 
