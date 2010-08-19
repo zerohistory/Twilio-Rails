@@ -6,11 +6,9 @@ module Trails
         _logger = opts[:logger] || ActiveRecord::Base.logger rescue Logger.new( STDERR )
         if( !opts.blank? ) 
           _logger.warn "overriding default opts #{self.class.config.inspect} with #{opts.inspect}"
-        else
-          opts = self.class.config[self.class.config.keys.first]
         end
-        @config = opts.dup
-        @sid = @config[:sid] || raise( "no sid specified on #{self}" )
+        @config = self.config
+        @sid = @config[:sid]
         @token = @config[:token]
         @logger = _logger
       end
