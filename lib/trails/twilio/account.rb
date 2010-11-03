@@ -4,11 +4,11 @@ module Trails
       attr_reader :config
       def initialize( opts = {} )
         _logger = opts[:logger] || ActiveRecord::Base.logger rescue Logger.new( STDERR )
-        if( !opts.blank? ) 
+        if( !opts.blank? )
           _logger.warn "overriding default opts #{self.class.config.inspect} with #{opts.inspect}"
         end
-        @config = self.config
-        @sid = @config[:sid]
+        @config = self.class.config
+        @sid = @config[:account_sid]
         @token = @config[:token]
         @logger = _logger
       end
@@ -19,11 +19,7 @@ module Trails
 
       def self.from_request( request )
         sid = sid_from_request( request )
-        unless( config.has_key?( sid ) )
-          logger.warn{ "unknown twilio account #{sid}. Request params: #{request.inspect}" }
-          raise Trails::Exception::UnknownAccount.new( sid )
-        end
-        account = new( config[sid].dup )
+        account = new( config[:account_sid].dup )
         raise Trails::Exception::InvalidSignature unless account.verify_caller( request )
         account
       end
@@ -37,7 +33,7 @@ module Trails
       # Required:
       # - number
       # - handler_url
-      # 
+      #
       # Options:
       # - :caller
       # - :method
@@ -74,18 +70,18 @@ module Trails
           'Body' => body,
           'Method' => opts[:method] || 'POST'
         }
-        request( 'SMS/Messages', 'POST', params ) 
+        request( 'SMS/Messages', 'POST', params )
       end
 
-      # Sample Response: 
+      # Sample Response:
       #  [{"SmsFallbackUrl"=>nil, "SmsUrl"=>nil, "PhoneNumber"=>"4253954994", "AccountSid"=>"AC6c25b3d8b4f0a2a4e49e4936398a2180", "Capabilities"=>{"SMS"=>"false", "Voice"=>"false"}, "Method"=>"POST", "Sid"=>"PNc939a026d5a332d22c23ca94a161ce29", "DateUpdated"=>"Sat, 20 Mar 2010 17:52:33 -0700", "DateCreated"=>"Sat, 20 Mar 2010 17:52:33 -0700", "Url"=>nil, "FriendlyName"=>"(425) 395-4994", "VoiceFallbackUrl"=>nil, "SmsFallbackMethod"=>"POST", "VoiceCallerIdLookup"=>"false", "SmsMethod"=>"POST", "VoiceFallbackMethod"=>"POST"}]
       def incoming_numbers( reset = false )
         if( @incoming_numbers.nil? || reset )
-          response = 
+          response =
             request( 'IncomingPhoneNumbers', 'GET' )
-          
+
           if( 200 == response.code.to_i )
-            @raw_incoming_numbers = Hash.from_xml( response.body ) 
+            @raw_incoming_numbers = Hash.from_xml( response.body )
           else
             raise "got response code #{response.code} and body #{response.body}"
           end
@@ -96,7 +92,7 @@ module Trails
 
       def outgoing_numbers( reset = false )
         if( @outgoing_numbers.nil? || reset )
-          response = 
+          response =
             request( 'OutgoingCallerIds', 'GET' )
           @outgoing_numbers_raw = Hpricot( response.body ) if( 200 == response.code.to_i )
           @outgoing_numbers = @outgoing_numbers_raw.search( '//phonenumber').
@@ -152,11 +148,11 @@ module Trails
         url = File.join( base_uri, resource )
         make_request( url, method, params )
       end
-    
+
 
       protected
 
-      
+
       # This makes it easy to create and call the TwilioRest library without
       # having to worry about where credentials come from and stuff.
       def make_request( *args )
@@ -183,8 +179,8 @@ module Trails
       def self.config
         @@all_cfg ||= YAML::load_file( config_file ).freeze
         # allow per-environment configuration
-        @@cfg ||= if ( @@all_cfg.has_key?( Rails.env ) ) 
-                    @@all_cfg[ Rails.env ] 
+        @@cfg ||= if ( @@all_cfg.has_key?( Rails.env ) )
+                    @@all_cfg[ Rails.env ]
                   elsif( @@all_cfg.has_key?( 'default' ) )
                     @@all_cfg['default']
                   else
